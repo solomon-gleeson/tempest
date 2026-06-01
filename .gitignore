@@ -4,6 +4,7 @@
 .idea/
 .vscode/
 *.iml
+setup.txt
 
 # Tempest runtime artifacts
 *.dll.bak

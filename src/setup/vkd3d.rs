@@ -18,7 +18,7 @@ pub async fn install(prefix: &Path) -> Result<(), TempestError> {
         .build()?;
 
     let (version, url) = super::fetch_github_release(&client, REPO, ".tar.zst").await?;
-    println!("{} vkd3d-proton {} — downloading...", "[INFO]".cyan(), version);
+    println!("{} vkd3d-proton {} - downloading...", "[INFO]".cyan(), version);
 
     let tmp_dir = crate::config::Config::data_dir().join("tmp");
     std::fs::create_dir_all(&tmp_dir)?;

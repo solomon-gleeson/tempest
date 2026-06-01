@@ -251,7 +251,7 @@ pub fn run() {
         checks.push(Check::fail(
             "Game server (UDP)",
             "vortex.towerstats.com:7777 unreachable",
-            "UDP port 7777 may be blocked — check firewall/router",
+            "UDP port 7777 may be blocked. Check your firewall or router.",
         ));
     }
 

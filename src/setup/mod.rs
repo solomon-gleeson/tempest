@@ -163,11 +163,20 @@ fn distro_commands(distro: &Distro) -> DistroCommands {
     }
 }
 
+fn is_root() -> bool {
+    unsafe { libc::getuid() == 0 }
+}
+
 fn run_cmd(cmd: &str) -> bool {
-    println!("{} {}", ">>>".cyan(), cmd.bold());
+    let effective = if is_root() {
+        cmd.replace("sudo ", "")
+    } else {
+        cmd.to_string()
+    };
+    println!("{} {}", ">>>".cyan(), effective.bold());
     Command::new("sh")
         .arg("-c")
-        .arg(cmd)
+        .arg(&effective)
         .status()
         .map(|s| s.success())
         .unwrap_or_else(|e| { eprintln!("{} {}", "[ERROR]".red(), e); false })

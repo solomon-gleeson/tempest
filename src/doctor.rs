@@ -51,12 +51,17 @@ pub fn run() {
         }
     }
 
-    if cfg.paths.wine_prefix.exists() {
+    let prefix_ready = cfg.paths.wine_prefix.join("system.reg").exists();
+    if prefix_ready {
         checks.push(Check::pass("Wine prefix exists", cfg.paths.wine_prefix.display().to_string()));
     } else {
         checks.push(Check::fail(
             "Wine prefix exists",
-            cfg.paths.wine_prefix.display().to_string(),
+            if cfg.paths.wine_prefix.exists() {
+                "directory exists but not initialised (wineboot not run)".to_string()
+            } else {
+                cfg.paths.wine_prefix.display().to_string()
+            },
             "Run: tempest setup",
         ));
     }

@@ -6,12 +6,18 @@ pub fn verify_dll(path: &Path) -> bool {
     if !path.exists() {
         return false;
     }
-    std::process::Command::new("file")
-        .arg(path)
-        .output()
-        .map(|out| {
+    if let Ok(out) = std::process::Command::new("file").arg(path).output() {
+        if out.status.success() {
             let s = String::from_utf8_lossy(&out.stdout);
-            s.contains("PE32") || s.contains("MS-DOS executable")
+            return s.contains("PE32") || s.contains("MS-DOS executable");
+        }
+    }
+    use std::io::Read;
+    std::fs::File::open(path)
+        .and_then(|mut f| {
+            let mut magic = [0u8; 2];
+            f.read_exact(&mut magic)?;
+            Ok(magic == [0x4D, 0x5A])
         })
         .unwrap_or(false)
 }

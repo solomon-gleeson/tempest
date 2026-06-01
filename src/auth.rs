@@ -76,21 +76,68 @@ async fn validate_token(token: &str) -> Result<String, TempestError> {
     }
 
     let html = resp.text().await.unwrap_or_default();
-    let username = extract_username_from_html(&html)
-        .unwrap_or_else(|| "player".to_string());
 
-    Ok(username)
+    if let Some(user_id) = extract_user_id(&html) {
+        let profile_url = format!(
+            "https://vortex.towerstats.com/users/{}/profile",
+            user_id
+        );
+        tracing::debug!("Fetching profile: {}", profile_url);
+        if let Ok(profile_resp) = client.get(&profile_url)
+            .header("Cookie", format!("session_token={}", token))
+            .send()
+            .await
+        {
+            if profile_resp.status().is_success() {
+                if let Ok(profile_html) = profile_resp.text().await {
+                    if let Some(name) = extract_username_from_profile(&profile_html) {
+                        return Ok(name);
+                    }
+                }
+            }
+        }
+    }
+
+    Ok("player".to_string())
 }
 
-fn extract_username_from_html(html: &str) -> Option<String> {
+fn extract_user_id(html: &str) -> Option<u64> {
+    let needle = "/users/";
+    let mut search = html;
+    while let Some(pos) = search.find(needle) {
+        let rest = &search[pos + needle.len()..];
+        let id_end = rest.find(|c: char| !c.is_ascii_digit()).unwrap_or(rest.len());
+        let digits = &rest[..id_end];
+        if !digits.is_empty() && rest[id_end..].starts_with("/profile") {
+            if let Ok(id) = digits.parse::<u64>() {
+                return Some(id);
+            }
+        }
+        search = &search[pos + 1..];
+    }
+    None
+}
+
+fn extract_attr(html: &str, pattern: &str) -> Option<String> {
+    let start = html.find(pattern)?;
+    let rest = &html[start + pattern.len()..];
+    let end = rest.find(|c: char| c == '"' || c == '<')?;
+    let val = rest[..end].trim().to_string();
+    if !val.is_empty() && val.len() < 64 { Some(val) } else { None }
+}
+
+fn extract_username_from_profile(html: &str) -> Option<String> {
     for pattern in &[r#"data-username=""#, r#""username":""#, r#"data-user=""#] {
-        if let Some(start) = html.find(pattern) {
-            let rest = &html[start + pattern.len()..];
-            if let Some(end) = rest.find(|c: char| c == '"' || c == '<') {
-                let name = rest[..end].trim().to_string();
-                if !name.is_empty() && name.len() < 64 {
-                    return Some(name);
-                }
+        if let Some(name) = extract_attr(html, pattern) {
+            return Some(name);
+        }
+    }
+    if let Some(start) = html.find("<title>") {
+        let rest = &html[start + 7..];
+        if let Some(end) = rest.find("'s Profile") {
+            let name = rest[..end].trim().to_string();
+            if !name.is_empty() && name.len() < 64 {
+                return Some(name);
             }
         }
     }

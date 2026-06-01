@@ -1,1 +1,14 @@
 /target
+
+# Development environment
+.idea/
+.vscode/
+*.iml
+
+# Tempest runtime artifacts
+*.dll.bak
+/assets/*.tmp
+
+# OS
+.DS_Store
+Thumbs.db

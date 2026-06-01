@@ -91,7 +91,7 @@ shader_cache = true         # cache vkd3d-proton shaders across launches
 tempest doctor
 ```
 
-Checks Wine, Vulkan, GPU, DXVK, vkd3d-proton, GameMode, the URI handler, network connectivity, and receiver.exe — with per-distro fix hints for every failure.
+Checks Wine, Vulkan, GPU, DXVK, vkd3d-proton, GameMode, the URI handler, network connectivity, and receiver.exe, with per-distro fix hints for every failure.
 
 ```bash
 TEMPEST_LOG=debug tempest play 4
@@ -102,7 +102,7 @@ TEMPEST_LOG=debug tempest play 4
 ## Known limitations
 
 - Wine runs under XWayland. Native Wayland Wine support depends on your Wine build.
-- First launch after a fresh `wineboot` may take 30–60 seconds while Wine initialises the prefix.
+- First launch after a fresh `wineboot` may take 30 to 60 seconds while Wine initialises the prefix.
 - NVIDIA Optimus: if the integrated GPU is selected, set `VK_ICD_FILENAMES` in `[wine.env]` to force the discrete GPU.
 
 ---

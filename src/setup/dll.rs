@@ -49,7 +49,7 @@ pub fn install_dll(src: &Path, dest: &Path) -> Result<(), TempestError> {
 
     if dest.exists() && !verify_dll(dest) {
         println!(
-            "{} {} is not a valid PE binary — replacing anyway",
+            "{} {} is not a valid PE binary, replacing anyway",
             "[WARN]".yellow(),
             dest.file_name().unwrap_or_default().to_string_lossy()
         );

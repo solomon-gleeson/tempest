@@ -24,7 +24,7 @@ impl ProcessManager {
 
         if !path.exists() {
             println!(
-                "{} receiver.exe not found at {} — in-game notifications may not work",
+                "{} receiver.exe not found at {} (in-game notifications may not work)",
                 "[WARN]".yellow(),
                 path.display()
             );

@@ -175,7 +175,7 @@ async fn launch_with_uri(uri: String) {
         }
         None => {
             eprintln!("{} Wine process was terminated by a signal.", "[WARN]".yellow());
-            eprintln!("  This may indicate a crash — check Wine compatibility.");
+            eprintln!("  This may indicate a crash. Check Wine compatibility.");
         }
     }
 }

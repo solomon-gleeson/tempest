@@ -174,6 +174,6 @@ pub async fn get_play_uri(session_token: &str, game_id: u32) -> Result<String, T
     }
 
     Err(TempestError::AuthError(
-        "Could not find vortex:// URI in play page — is the session token valid?".to_string(),
+        "Could not find vortex:// URI in play page. Is the session token valid?".to_string(),
     ))
 }

@@ -220,11 +220,11 @@ pub async fn run() {
     println!();
     println!("{} Creating Wine prefix at {}", "[INFO]".cyan(), prefix.display());
     std::fs::create_dir_all(prefix).ok();
-    run_cmd(&format!("WINEPREFIX=\"{}\" wine wineboot --init", prefix.display()));
+    run_cmd(&format!("WINEPREFIX=\"{}\" WINEDEBUG=-all wine wineboot --init", prefix.display()));
 
     println!("{} Installing winetricks components...", "[INFO]".cyan());
     run_cmd(&format!(
-        "WINEPREFIX=\"{}\" winetricks -q d3dcompiler_47 vcrun2022 corefonts",
+        "WINEPREFIX=\"{}\" WINEDEBUG=-all winetricks -q d3dcompiler_47 vcrun2022 corefonts",
         prefix.display()
     ));
 

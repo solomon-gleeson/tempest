@@ -19,7 +19,7 @@ Tempest is a community-built command-line tool that handles Wine configuration, 
 ## Install
 
 ```bash
-curl -fsSL https://github.com/yourusername/tempest/releases/latest/download/install.sh | bash
+curl -fsSL https://github.com/solomon-gleeson/tempest/releases/latest/download/install.sh | bash
 tempest setup
 ```
 

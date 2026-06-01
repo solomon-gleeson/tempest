@@ -52,10 +52,11 @@ async fn validate_token(token: &str) -> Result<String, TempestError> {
     let client = reqwest::Client::builder()
         .redirect(reqwest::redirect::Policy::none())
         .build()?;
+    let cookie = format!("session_token={}", token);
 
     let resp = client
         .get("https://vortex.towerstats.com/")
-        .header("Cookie", format!("session_token={}", token))
+        .header("Cookie", &cookie)
         .send()
         .await?;
 
@@ -84,7 +85,7 @@ async fn validate_token(token: &str) -> Result<String, TempestError> {
         );
         tracing::debug!("Fetching profile: {}", profile_url);
         if let Ok(profile_resp) = client.get(&profile_url)
-            .header("Cookie", format!("session_token={}", token))
+            .header("Cookie", &cookie)
             .send()
             .await
         {

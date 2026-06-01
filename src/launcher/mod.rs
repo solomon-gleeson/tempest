@@ -5,11 +5,11 @@ use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 use crate::config::Config;
 
-fn perf_summary(config: &Config) -> String {
+fn perf_summary(config: &Config, use_gamemode: bool) -> String {
     let mut active = vec![];
     if config.launcher.use_fsync { active.push("fsync"); }
     else if config.launcher.use_esync { active.push("esync"); }
-    if config.launcher.use_gamemode && which::which("gamemoderun").is_ok() { active.push("gamemode"); }
+    if use_gamemode { active.push("gamemode"); }
     if config.launcher.shader_cache { active.push("shader-cache"); }
     if active.is_empty() { "none".to_string() } else { active.join(" ") }
 }
@@ -31,10 +31,8 @@ fn is_noise(line: &str) -> bool {
     NOISE_PATTERNS.iter().any(|p| line.contains(p))
 }
 
-fn build_wine_command(config: &Config, uri: &str) -> Command {
+fn build_wine_command(config: &Config, uri: &str, use_gamemode: bool) -> Command {
     let perf = &config.launcher;
-
-    let use_gamemode = perf.use_gamemode && which::which("gamemoderun").is_ok();
 
     let mut cmd = if use_gamemode {
         let mut c = Command::new("gamemoderun");
@@ -115,14 +113,15 @@ async fn launch_with_uri(uri: String) {
         .map(|(id, _)| id.to_string())
         .unwrap_or_else(|| "?".to_string());
 
+    let use_gamemode = cfg.launcher.use_gamemode && which::which("gamemoderun").is_ok();
     println!("{} Launching Vortex for game {} [{}]...",
-        "[INFO]".cyan(), game_id, perf_summary(&cfg).bold());
+        "[INFO]".cyan(), game_id, perf_summary(&cfg, use_gamemode).bold());
     tracing::debug!("Launch URI: {}", uri);
 
     let mut pm = process::ProcessManager::new();
     pm.ensure_receiver(&cfg);
 
-    let mut cmd = build_wine_command(&cfg, &uri);
+    let mut cmd = build_wine_command(&cfg, &uri, use_gamemode);
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());
 

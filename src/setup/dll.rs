@@ -59,6 +59,19 @@ pub fn install_dll(src: &Path, dest: &Path) -> Result<(), TempestError> {
     Ok(())
 }
 
+pub fn install_dlls_from(src_dir: &Path, dest_dir: &Path, dlls: &[&str]) -> Result<(), TempestError> {
+    if !src_dir.exists() {
+        return Ok(());
+    }
+    for name in dlls {
+        let src = src_dir.join(name);
+        if src.exists() {
+            install_dll(&src, &dest_dir.join(name))?;
+        }
+    }
+    Ok(())
+}
+
 pub fn set_dll_override(prefix: &Path, dll_name: &str, override_type: &str) -> bool {
     let ok = std::process::Command::new("wine")
         .env("WINEPREFIX", prefix)

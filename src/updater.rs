@@ -9,26 +9,25 @@ const DOWNLOAD_URL: &str = "https://vortex.towerstats.com/download/windows";
 
 pub async fn update() {
     let cfg = Config::load();
-    let dest = &cfg.paths.vortex_exe;
+    let dest = cfg.paths.vortex_exe.clone();
 
     println!("{} Downloading Vortex...", "[INFO]".cyan());
 
-    match download_vortex(dest).await {
+    match download_vortex(&dest, cfg.auth.session_token.as_deref()).await {
         Ok(()) => println!("{} Vortex.exe ready at {}", "[DONE]".green(), dest.display()),
         Err(e) => eprintln!("{} Update failed: {}", "[ERROR]".red(), e),
     }
 }
 
-pub async fn download_vortex(dest: &Path) -> Result<(), TempestError> {
+async fn download_vortex(dest: &Path, session_token: Option<&str>) -> Result<(), TempestError> {
     if let Some(parent) = dest.parent() {
         std::fs::create_dir_all(parent)?;
     }
 
-    let cfg = Config::load();
     let client = reqwest::Client::new();
 
     let mut req = client.get(DOWNLOAD_URL);
-    if let Some(token) = &cfg.auth.session_token {
+    if let Some(token) = session_token {
         req = req.header("Cookie", format!("session_token={}", token));
     }
 

@@ -13,11 +13,6 @@ const OVERRIDES: &[(&str, &str)] = &[
     ("dxgi",     "native,builtin"),
 ];
 
-pub fn is_installed(prefix: &Path) -> bool {
-    let dxgi = prefix.join("drive_c/windows/system32/dxgi.dll");
-    dll::verify_dll(&dxgi)
-}
-
 pub async fn install(prefix: &Path) -> Result<(), TempestError> {
     println!("{} Installing DXVK (D3D9/10/11 → Vulkan)...", "[INFO]".cyan());
 
@@ -67,23 +62,10 @@ fn extract_and_install(archive: &Path, prefix: &Path) -> Result<(), TempestError
 
     for entry in std::fs::read_dir(&extract_dir)? {
         let dxvk_dir = entry?.path();
-        install_arch_dlls(&dxvk_dir.join("x64"), &sys32)?;
-        install_arch_dlls(&dxvk_dir.join("x32"), &syswow64)?;
+        dll::install_dlls_from(&dxvk_dir.join("x64"), &sys32,    DLLS)?;
+        dll::install_dlls_from(&dxvk_dir.join("x32"), &syswow64, DLLS)?;
     }
 
     std::fs::remove_dir_all(&extract_dir).ok();
-    Ok(())
-}
-
-fn install_arch_dlls(src_dir: &Path, dest_dir: &Path) -> Result<(), TempestError> {
-    if !src_dir.exists() {
-        return Ok(());
-    }
-    for name in DLLS {
-        let src = src_dir.join(name);
-        if src.exists() {
-            dll::install_dll(&src, &dest_dir.join(name))?;
-        }
-    }
     Ok(())
 }

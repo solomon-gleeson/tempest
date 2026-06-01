@@ -3,6 +3,7 @@ use std::net::TcpStream;
 use std::time::Duration;
 use crate::config::Config;
 use crate::setup::detect_distro;
+use libc;
 
 struct Check {
     name: &'static str,
@@ -26,7 +27,12 @@ impl Check {
         } else {
             println!("{} {}: {}", "[FAIL]".red().bold(), self.name.bold(), self.detail);
             if let Some(fix) = &self.fix {
-                println!("       {} {}", "-->".yellow(), fix.cyan());
+                let hint = if unsafe { libc::getuid() == 0 } {
+                    fix.replace("sudo ", "")
+                } else {
+                    fix.clone()
+                };
+                println!("       {} {}", "-->".yellow(), hint.cyan());
             }
         }
     }

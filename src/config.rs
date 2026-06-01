@@ -33,6 +33,10 @@ pub struct WineConfig {
 pub struct LauncherConfig {
     pub filter_wine_noise: bool,
     pub auto_update: bool,
+    pub use_esync: bool,
+    pub use_fsync: bool,
+    pub use_gamemode: bool,
+    pub shader_cache: bool,
 }
 
 impl Default for PathConfig {
@@ -59,6 +63,10 @@ impl Default for LauncherConfig {
         Self {
             filter_wine_noise: true,
             auto_update: true,
+            use_esync: true,
+            use_fsync: true,
+            use_gamemode: false,
+            shader_cache: true,
         }
     }
 }

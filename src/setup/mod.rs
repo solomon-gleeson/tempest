@@ -228,6 +228,24 @@ pub async fn run() {
         prefix.display()
     ));
 
+    if which::which("gamemoderun").is_err() {
+        let gm_cmd = match &distro {
+            Distro::Fedora   => Some("sudo dnf install gamemode"),
+            Distro::Debian   => Some("sudo apt install gamemode"),
+            Distro::Arch     => Some("sudo pacman -S gamemode"),
+            Distro::OpenSuse => Some("sudo zypper install gamemode"),
+            _                => None,
+        };
+        if let Some(cmd) = gm_cmd {
+            println!();
+            if prompt_confirm("Install GameMode? (reduces latency, sets CPU to performance governor)") {
+                run_cmd(cmd);
+            }
+        }
+    } else {
+        println!("{} GameMode already installed.", "[PASS]".green());
+    }
+
     println!();
     println!("{} Installing DXVK...", "[INFO]".cyan());
     if let Err(e) = dxvk::install(prefix).await {

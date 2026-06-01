@@ -5,6 +5,15 @@ use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 use crate::config::Config;
 
+fn perf_summary(config: &Config) -> String {
+    let mut active = vec![];
+    if config.launcher.use_fsync { active.push("fsync"); }
+    else if config.launcher.use_esync { active.push("esync"); }
+    if config.launcher.use_gamemode && which::which("gamemoderun").is_ok() { active.push("gamemode"); }
+    if config.launcher.shader_cache { active.push("shader-cache"); }
+    if active.is_empty() { "none".to_string() } else { active.join(" ") }
+}
+
 const NOISE_PATTERNS: &[&str] = &[
     "fixme:",
     "libEGL warning",
@@ -23,11 +32,37 @@ fn is_noise(line: &str) -> bool {
 }
 
 fn build_wine_command(config: &Config, uri: &str) -> Command {
-    let mut cmd = Command::new(&config.wine.binary);
+    let perf = &config.launcher;
+
+    let use_gamemode = perf.use_gamemode && which::which("gamemoderun").is_ok();
+
+    let mut cmd = if use_gamemode {
+        let mut c = Command::new("gamemoderun");
+        c.arg(&config.wine.binary);
+        c
+    } else {
+        Command::new(&config.wine.binary)
+    };
+
     cmd.env("WINEPREFIX", &config.paths.wine_prefix);
+
+    if perf.use_esync { cmd.env("WINEESYNC", "1"); }
+    if perf.use_fsync { cmd.env("WINEFSYNC", "1"); }
+
+    if perf.shader_cache {
+        let cache = dirs::cache_dir()
+            .unwrap_or_else(|| std::path::PathBuf::from(
+                std::env::var("HOME").unwrap_or_default() + "/.cache"
+            ))
+            .join("vortex-shaders");
+        std::fs::create_dir_all(&cache).ok();
+        cmd.env("VKD3D_SHADER_CACHE_PATH", cache);
+    }
+
     for (key, value) in &config.wine.env {
         cmd.env(key, value);
     }
+
     cmd.arg(&config.paths.vortex_exe);
     cmd.arg(uri);
     cmd
@@ -80,7 +115,8 @@ async fn launch_with_uri(uri: String) {
         .map(|(id, _)| id.to_string())
         .unwrap_or_else(|| "?".to_string());
 
-    println!("{} Launching Vortex for game {}...", "[INFO]".cyan(), game_id);
+    println!("{} Launching Vortex for game {} [{}]...",
+        "[INFO]".cyan(), game_id, perf_summary(&cfg).bold());
     tracing::debug!("Launch URI: {}", uri);
 
     let mut pm = process::ProcessManager::new();

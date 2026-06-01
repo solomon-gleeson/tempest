@@ -183,6 +183,20 @@ pub fn run() {
         ));
     }
 
+    match which::which("gamemoderun") {
+        Ok(_) => {
+            let status = if cfg.launcher.use_gamemode { "enabled" } else { "installed (set use_gamemode=true to enable)" };
+            checks.push(Check::pass("GameMode", status));
+        }
+        Err(_) => {
+            checks.push(Check::fail(
+                "GameMode",
+                "not installed (optional but recommended)",
+                gamemode_install_cmd(&distro),
+            ));
+        }
+    }
+
     let dxgi = cfg.paths.wine_prefix.join("drive_c/windows/system32/dxgi.dll");
     if crate::setup::dll::verify_dll(&dxgi) {
         checks.push(Check::pass("DXVK installed", "dxgi.dll is a valid PE"));
@@ -350,6 +364,16 @@ fn gpu_driver_fix(distro: &crate::setup::Distro) -> String {
         crate::setup::Distro::Fedora => "Install GPU drivers: sudo dnf install mesa-dri-drivers".to_string(),
         crate::setup::Distro::Debian => "Install GPU drivers: sudo apt install mesa-utils".to_string(),
         _ => "Install your GPU's Vulkan driver".to_string(),
+    }
+}
+
+fn gamemode_install_cmd(distro: &crate::setup::Distro) -> String {
+    match distro {
+        crate::setup::Distro::Fedora  => "sudo dnf install gamemode".to_string(),
+        crate::setup::Distro::Debian  => "sudo apt install gamemode".to_string(),
+        crate::setup::Distro::Arch    => "sudo pacman -S gamemode".to_string(),
+        crate::setup::Distro::OpenSuse => "sudo zypper install gamemode".to_string(),
+        crate::setup::Distro::Unknown(_) => "Install gamemode via your package manager".to_string(),
     }
 }
 

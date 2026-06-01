@@ -53,7 +53,7 @@ async fn download_vortex(dest: &Path, session_token: Option<&str>) -> Result<(),
     let mut zip_bytes: Vec<u8> = Vec::with_capacity(total.unwrap_or(10_000_000) as usize);
     let mut stream = resp.bytes_stream();
     while let Some(chunk) = stream.next().await {
-        let chunk = chunk.map_err(|e| TempestError::NetworkError(e))?;
+        let chunk = chunk.map_err(TempestError::NetworkError)?;
         zip_bytes.extend_from_slice(&chunk);
         pb.inc(chunk.len() as u64);
     }

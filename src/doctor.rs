@@ -168,8 +168,7 @@ pub fn run() {
         )),
     }
 
-    let token_stored = Config::load().auth.session_token.is_some();
-    if token_stored {
+    if cfg.auth.session_token.is_some() {
         checks.push(Check::pass("Session token stored", ""));
     } else {
         checks.push(Check::fail(

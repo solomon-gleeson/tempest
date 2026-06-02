@@ -229,31 +229,6 @@ pub fn run() {
         ));
     }
 
-    let receiver = cfg.paths.vortex_exe
-        .parent()
-        .unwrap_or_else(|| std::path::Path::new("."))
-        .join("receiver.exe");
-    if receiver.exists() {
-        checks.push(Check::pass("receiver.exe", receiver.display().to_string()));
-    } else {
-        checks.push(Check::fail(
-            "receiver.exe",
-            "not found alongside Vortex.exe",
-            "Run: tempest update (receiver.exe ships with Vortex)",
-        ));
-    }
-
-    let udp_ok = probe_udp("vortex.towerstats.com:7777");
-    if udp_ok {
-        checks.push(Check::pass("Game server (UDP)", "vortex.towerstats.com:7777 reachable"));
-    } else {
-        checks.push(Check::fail(
-            "Game server (UDP)",
-            "vortex.towerstats.com:7777 unreachable",
-            "UDP port 7777 may be blocked. Check your firewall or router.",
-        ));
-    }
-
     for check in &checks {
         check.print();
     }
@@ -328,17 +303,6 @@ fn extract_gpu(vulkaninfo: &str) -> Option<String> {
 fn is_nvidia() -> bool {
     std::path::Path::new("/dev/nvidia0").exists()
         || std::path::Path::new("/proc/driver/nvidia").exists()
-}
-
-fn probe_udp(addr: &str) -> bool {
-    use std::net::UdpSocket;
-    let Ok(sock) = UdpSocket::bind("0.0.0.0:0") else { return false };
-    sock.set_read_timeout(Some(Duration::from_secs(3))).ok();
-    if sock.send_to(b"\x00", addr).is_err() {
-        return false;
-    }
-    let mut buf = [0u8; 16];
-    sock.recv_from(&mut buf).is_ok()
 }
 
 fn wine_install_cmd(distro: &crate::setup::Distro) -> String {

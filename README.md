@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  A native Linux launcher for <a href="https://vortex.towerstats.com">Vortex</a>, written in Rust.
+  A native Linux launcher for <a href="https://playvortex.io">Vortex</a>, written in Rust.
 </p>
 
 ---
@@ -12,7 +12,7 @@ Tempest is a community-built command-line tool that handles Wine configuration, 
 
 **What it is:** A launcher wrapper that bridges the Linux desktop and the Windows Vortex client via Wine.
 
-**What it is not:** An official product. Tempest is not affiliated with, endorsed by, or supported by the Vortex team or towerstats.com. It does not modify, redistribute, or replicate any part of the Vortex client.
+**What it is not:** An official product. Tempest is not affiliated with, endorsed by, or supported by the Vortex team or playvortex.io. It does not modify, redistribute, or replicate any part of the Vortex client.
 
 ---
 
@@ -115,4 +115,4 @@ Bug reports and pull requests are welcome. Run `cargo test` before submitting.
 
 ## Disclaimer
 
-Tempest is an independent, community-developed tool and is not affiliated with, endorsed by, or in any way connected to the developers or operators of Vortex or towerstats.com. All trademarks and service marks are the property of their respective owners. Use of this tool is at your own risk.
+Tempest is an independent, community-developed tool and is not affiliated with, endorsed by, or in any way connected to the developers or operators of Vortex or playvortex.io. All trademarks and service marks are the property of their respective owners. Use of this tool is at your own risk.

@@ -5,7 +5,7 @@ use std::path::Path;
 use crate::config::Config;
 use crate::TempestError;
 
-const DOWNLOAD_URL: &str = "https://vortex.towerstats.com/download/windows";
+const DOWNLOAD_URL: &str = "https://playvortex.io/download/windows";
 
 pub async fn update() {
     let cfg = Config::load();

@@ -178,17 +178,17 @@ pub fn run() {
         ));
     }
 
-    let tcp_ok = std::net::ToSocketAddrs::to_socket_addrs(&("vortex.towerstats.com", 443u16))
+    let tcp_ok = std::net::ToSocketAddrs::to_socket_addrs(&("playvortex.io", 443u16))
         .ok()
         .and_then(|mut addrs| addrs.next())
         .map(|addr| TcpStream::connect_timeout(&addr, Duration::from_secs(5)).is_ok())
         .unwrap_or(false);
     if tcp_ok {
-        checks.push(Check::pass("Network (HTTPS)", "vortex.towerstats.com:443 reachable"));
+        checks.push(Check::pass("Network (HTTPS)", "playvortex.io:443 reachable"));
     } else {
         checks.push(Check::fail(
             "Network (HTTPS)",
-            "vortex.towerstats.com:443 unreachable",
+            "playvortex.io:443 unreachable",
             "Check your internet connection or firewall",
         ));
     }

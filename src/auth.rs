@@ -6,14 +6,14 @@ pub async fn login() {
     println!("{}", "=== Vortex Login ===".bold().cyan());
 
     std::process::Command::new("xdg-open")
-        .arg("https://vortex.towerstats.com/")
+        .arg("https://playvortex.io/")
         .spawn()
         .ok();
 
     println!("{} Log in to Vortex in your browser.", "[INFO]".cyan());
     println!("{} Then paste your session_token cookie here:", "[INFO]".cyan());
-    println!("{}", "  Firefox: F12 -> Storage -> Cookies -> vortex.towerstats.com -> session_token".italic());
-    println!("{}", "  Chrome:  F12 -> Application -> Cookies -> vortex.towerstats.com -> session_token".italic());
+    println!("{}", "  Firefox: F12 -> Storage -> Cookies -> playvortex.io -> session_token".italic());
+    println!("{}", "  Chrome:  F12 -> Application -> Cookies -> playvortex.io -> session_token".italic());
     println!();
     print!("{} Token: ", ">>>".cyan());
 
@@ -55,7 +55,7 @@ async fn validate_token(token: &str) -> Result<String, TempestError> {
     let cookie = format!("session_token={}", token);
 
     let resp = client
-        .get("https://vortex.towerstats.com/")
+        .get("https://playvortex.io/")
         .header("Cookie", &cookie)
         .send()
         .await?;
@@ -80,7 +80,7 @@ async fn validate_token(token: &str) -> Result<String, TempestError> {
 
     if let Some(user_id) = extract_user_id(&html) {
         let profile_url = format!(
-            "https://vortex.towerstats.com/users/{}/profile",
+            "https://playvortex.io/users/{}/profile",
             user_id
         );
         tracing::debug!("Fetching profile: {}", profile_url);
@@ -147,7 +147,7 @@ fn extract_username_from_profile(html: &str) -> Option<String> {
 
 pub async fn get_play_uri(session_token: &str, game_id: u32) -> Result<String, TempestError> {
     let client = reqwest::Client::new();
-    let url = format!("https://vortex.towerstats.com/games/{}/play", game_id);
+    let url = format!("https://playvortex.io/games/{}/play", game_id);
     let resp = client
         .get(&url)
         .header("Cookie", format!("session_token={}", session_token))

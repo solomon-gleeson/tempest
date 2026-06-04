@@ -44,6 +44,8 @@ fn build_wine_command(config: &Config, uri: &str, use_gamemode: bool) -> Command
 
     cmd.env("WINEPREFIX", &config.paths.wine_prefix);
 
+    cmd.env("WGPU_BACKEND", "vulkan");
+
     if perf.use_esync { cmd.env("WINEESYNC", "1"); }
     if perf.use_fsync { cmd.env("WINEFSYNC", "1"); }
 

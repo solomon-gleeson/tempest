@@ -27,6 +27,9 @@ tar = "0.4"
 flate2 = "1"
 zstd = "0.13"
 
+[lints.clippy]
+all = "deny"
+
 [profile.release]
 opt-level = 3
 lto = true

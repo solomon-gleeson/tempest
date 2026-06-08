@@ -1,5 +1,4 @@
 use colored::Colorize;
-use indicatif::{ProgressBar, ProgressStyle};
 use std::io::{Cursor, Write};
 use std::path::Path;
 use crate::config::Config;
@@ -41,13 +40,7 @@ async fn download_vortex(dest: &Path, session_token: Option<&str>) -> Result<(),
     }
 
     let total = resp.content_length();
-    let pb = ProgressBar::new(total.unwrap_or(0));
-    pb.set_style(
-        ProgressStyle::default_bar()
-            .template("{spinner:.green} [{bar:40.cyan/blue}] {bytes}/{total_bytes} ({eta})")
-            .unwrap()
-            .progress_chars("=>-"),
-    );
+    let pb = crate::setup::progress_bar(total);
 
     use futures_util::StreamExt;
     let mut zip_bytes: Vec<u8> = Vec::with_capacity(total.unwrap_or(10_000_000) as usize);

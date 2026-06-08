@@ -88,6 +88,17 @@ pub(crate) async fn fetch_github_release(
     Ok((tag, download_url))
 }
 
+pub(crate) fn progress_bar(total: Option<u64>) -> ProgressBar {
+    let pb = ProgressBar::new(total.unwrap_or(0));
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("{spinner:.green} [{bar:40.cyan/blue}] {bytes}/{total_bytes} ({eta})")
+            .unwrap()
+            .progress_chars("=>-"),
+    );
+    pb
+}
+
 pub(crate) async fn download_file(
     client: &reqwest::Client,
     url: &str,
@@ -100,14 +111,7 @@ pub(crate) async fn download_file(
         return Err(TempestError::Other(format!("Download failed: {}", resp.status())));
     }
 
-    let total = resp.content_length();
-    let pb = ProgressBar::new(total.unwrap_or(0));
-    pb.set_style(
-        ProgressStyle::default_bar()
-            .template("{spinner:.green} [{bar:40.cyan/blue}] {bytes}/{total_bytes} ({eta})")
-            .unwrap()
-            .progress_chars("=>-"),
-    );
+    let pb = progress_bar(resp.content_length());
 
     let mut file = std::fs::File::create(dest)?;
     let mut stream = resp.bytes_stream();
@@ -163,7 +167,7 @@ fn distro_commands(distro: &Distro) -> DistroCommands {
     }
 }
 
-fn is_root() -> bool {
+pub(crate) fn is_root() -> bool {
     unsafe { libc::getuid() == 0 }
 }
 

@@ -26,7 +26,7 @@ impl Check {
         } else {
             println!("{} {}: {}", "[FAIL]".red().bold(), self.name.bold(), self.detail);
             if let Some(fix) = &self.fix {
-                let hint = if unsafe { libc::getuid() == 0 } {
+                let hint = if crate::setup::is_root() {
                     fix.replace("sudo ", "")
                 } else {
                     fix.clone()

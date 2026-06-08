@@ -6,11 +6,11 @@ pub fn verify_dll(path: &Path) -> bool {
     if !path.exists() {
         return false;
     }
-    if let Ok(out) = std::process::Command::new("file").arg(path).output() {
-        if out.status.success() {
-            let s = String::from_utf8_lossy(&out.stdout);
-            return s.contains("PE32") || s.contains("MS-DOS executable");
-        }
+    if let Ok(out) = std::process::Command::new("file").arg(path).output()
+        && out.status.success()
+    {
+        let s = String::from_utf8_lossy(&out.stdout);
+        return s.contains("PE32") || s.contains("MS-DOS executable");
     }
     use std::io::Read;
     std::fs::File::open(path)

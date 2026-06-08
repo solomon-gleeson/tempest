@@ -147,7 +147,7 @@ async fn launch_with_uri(uri: String) {
 
     let stderr_handle = std::thread::spawn(move || {
         if let Some(reader) = stderr {
-            for line in reader.lines().flatten() {
+            for line in reader.lines().map_while(Result::ok) {
                 if filter && is_noise(&line) { continue; }
                 eprintln!("{}", line);
             }
@@ -156,7 +156,7 @@ async fn launch_with_uri(uri: String) {
 
     let stdout_handle = std::thread::spawn(move || {
         if let Some(reader) = stdout {
-            for line in reader.lines().flatten() {
+            for line in reader.lines().map_while(Result::ok) {
                 if filter && is_noise(&line) { continue; }
                 println!("{}", line);
             }

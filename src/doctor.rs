@@ -3,7 +3,6 @@ use std::net::TcpStream;
 use std::time::Duration;
 use crate::config::Config;
 use crate::setup::detect_distro;
-use libc;
 
 struct Check {
     name: &'static str,
@@ -268,15 +267,15 @@ fn extract_gpu(vulkaninfo: &str) -> Option<String> {
             in_gpu_block = true;
             current_type.clear();
             current_name.clear();
-        } else if in_gpu_block {
-            if let Some(eq) = trimmed.find('=') {
-                let key = trimmed[..eq].trim();
-                let val = trimmed[eq + 1..].trim().to_string();
-                if key == "deviceName" {
-                    current_name = val;
-                } else if key == "deviceType" {
-                    current_type = val;
-                }
+        } else if in_gpu_block
+            && let Some(eq) = trimmed.find('=')
+        {
+            let key = trimmed[..eq].trim();
+            let val = trimmed[eq + 1..].trim().to_string();
+            if key == "deviceName" {
+                current_name = val;
+            } else if key == "deviceType" {
+                current_type = val;
             }
         }
     }
@@ -291,10 +290,10 @@ fn extract_gpu(vulkaninfo: &str) -> Option<String> {
 
     for line in vulkaninfo.lines() {
         let trimmed = line.trim();
-        if let Some(eq) = trimmed.find('=') {
-            if trimmed[..eq].trim() == "deviceName" {
-                return Some(trimmed[eq + 1..].trim().to_string());
-            }
+        if let Some(eq) = trimmed.find('=')
+            && trimmed[..eq].trim() == "deviceName"
+        {
+            return Some(trimmed[eq + 1..].trim().to_string());
         }
     }
     None

@@ -2,155 +2,74 @@ use colored::Colorize;
 use crate::config::Config;
 use crate::TempestError;
 
+const BASE: &str = "https://playvortex.io";
+
 pub async fn login() {
     println!("{}", "=== Vortex Login ===".bold().cyan());
 
-    std::process::Command::new("xdg-open")
-        .arg("https://playvortex.io/")
-        .spawn()
-        .ok();
+    let username = prompt("Username: ");
+    let password = prompt_hidden("Password: ");
 
-    println!("{} Log in to Vortex in your browser.", "[INFO]".cyan());
-    println!("{} Then paste your session_token cookie here:", "[INFO]".cyan());
-    println!("{}", "  Firefox: F12 -> Storage -> Cookies -> playvortex.io -> session_token".italic());
-    println!("{}", "  Chrome:  F12 -> Application -> Cookies -> playvortex.io -> session_token".italic());
-    println!();
-    print!("{} Token: ", ">>>".cyan());
-
-    use std::io::Write;
-    std::io::stdout().flush().ok();
-
-    let mut token = String::new();
-    std::io::stdin().read_line(&mut token).unwrap();
-    let token = token.trim().to_string();
-
-    if token.is_empty() {
-        eprintln!("{} No token provided.", "[ERROR]".red());
+    if username.is_empty() || password.is_empty() {
+        eprintln!("{} Username and password required.", "[ERROR]".red());
         return;
     }
 
-    println!("{} Validating token...", "[INFO]".cyan());
-    match validate_token(&token).await {
-        Ok(username) => {
-            println!("{} Logged in as {}", "[PASS]".green(), username.bold());
+    println!("{} Signing in...", "[INFO]".cyan());
+    match login_direct(&username, &password).await {
+        Ok(token) => {
             let mut cfg = Config::load();
             cfg.auth.session_token = Some(token);
-            cfg.auth.username = Some(username);
+            cfg.auth.username = Some(username.clone());
             if let Err(e) = cfg.save() {
                 eprintln!("{} Failed to save config: {}", "[ERROR]".red(), e);
             } else {
-                println!("{} Token saved to config.", "[DONE]".green());
+                println!("{} Logged in as {}", "[DONE]".green(), username.bold());
             }
         }
-        Err(e) => {
-            eprintln!("{} Token validation failed: {}", "[ERROR]".red(), e);
-        }
+        Err(e) => eprintln!("{} Login failed: {}", "[ERROR]".red(), e),
     }
 }
 
-async fn validate_token(token: &str) -> Result<String, TempestError> {
+pub async fn login_direct(username: &str, password: &str) -> Result<String, TempestError> {
     let client = reqwest::Client::builder()
         .redirect(reqwest::redirect::Policy::none())
         .build()?;
-    let cookie = format!("session_token={}", token);
 
     let resp = client
-        .get("https://playvortex.io/")
-        .header("Cookie", &cookie)
+        .post(format!("{BASE}/login"))
+        .form(&[
+            ("username", username),
+            ("password", password),
+            ("fingerprint", ""),
+            ("fp_token", ""),
+        ])
         .send()
         .await?;
 
     let status = resp.status();
-
-    if status.is_redirection() {
-        let location = resp.headers()
-            .get("location")
-            .and_then(|v| v.to_str().ok())
-            .unwrap_or("");
-        if location.contains("login") || location.contains("signin") {
-            return Err(TempestError::AuthError("Token rejected by server".to_string()));
+    if status.is_redirection() || status.is_success() {
+        if let Some(cookie) = resp.cookies().find(|c| c.name() == "session_token") {
+            return Ok(cookie.value().to_string());
         }
+        return Err(TempestError::AuthError(
+            "server accepted login but set no session_token cookie".to_string(),
+        ));
     }
 
-    if !status.is_success() && !status.is_redirection() {
-        return Err(TempestError::AuthError(format!("Server returned {}", status)));
-    }
-
-    let html = resp.text().await.unwrap_or_default();
-
-    if let Some(user_id) = extract_user_id(&html) {
-        let profile_url = format!(
-            "https://playvortex.io/users/{}/profile",
-            user_id
-        );
-        tracing::debug!("Fetching profile: {}", profile_url);
-        if let Ok(profile_resp) = client.get(&profile_url)
-            .header("Cookie", &cookie)
-            .send()
-            .await
-        {
-            if profile_resp.status().is_success() {
-                if let Ok(profile_html) = profile_resp.text().await {
-                    if let Some(name) = extract_username_from_profile(&profile_html) {
-                        return Ok(name);
-                    }
-                }
-            }
-        }
-    }
-
-    Ok("player".to_string())
-}
-
-fn extract_user_id(html: &str) -> Option<u64> {
-    let needle = "/users/";
-    let mut search = html;
-    while let Some(pos) = search.find(needle) {
-        let rest = &search[pos + needle.len()..];
-        let id_end = rest.find(|c: char| !c.is_ascii_digit()).unwrap_or(rest.len());
-        let digits = &rest[..id_end];
-        if !digits.is_empty() && rest[id_end..].starts_with("/profile") {
-            if let Ok(id) = digits.parse::<u64>() {
-                return Some(id);
-            }
-        }
-        search = &search[pos + 1..];
-    }
-    None
-}
-
-fn extract_attr(html: &str, pattern: &str) -> Option<String> {
-    let start = html.find(pattern)?;
-    let rest = &html[start + pattern.len()..];
-    let end = rest.find(|c: char| c == '"' || c == '<')?;
-    let val = rest[..end].trim().to_string();
-    if !val.is_empty() && val.len() < 64 { Some(val) } else { None }
-}
-
-fn extract_username_from_profile(html: &str) -> Option<String> {
-    for pattern in &[r#"data-username=""#, r#""username":""#, r#"data-user=""#] {
-        if let Some(name) = extract_attr(html, pattern) {
-            return Some(name);
-        }
-    }
-    if let Some(start) = html.find("<title>") {
-        let rest = &html[start + 7..];
-        if let Some(end) = rest.find("'s Profile") {
-            let name = rest[..end].trim().to_string();
-            if !name.is_empty() && name.len() < 64 {
-                return Some(name);
-            }
-        }
-    }
-    None
+    let body = resp.text().await.unwrap_or_default();
+    let detail = serde_json::from_str::<serde_json::Value>(&body)
+        .ok()
+        .and_then(|v| v["detail"].as_str().map(str::to_string))
+        .unwrap_or_else(|| "invalid username or password".to_string());
+    Err(TempestError::AuthError(detail))
 }
 
 pub async fn get_play_uri(session_token: &str, game_id: u32) -> Result<String, TempestError> {
     let client = reqwest::Client::new();
-    let url = format!("https://playvortex.io/games/{}/play", game_id);
     let resp = client
-        .get(&url)
-        .header("Cookie", format!("session_token={}", session_token))
+        .get(format!("{BASE}/games/{game_id}/play"))
+        .header("Cookie", format!("session_token={session_token}"))
         .send()
         .await?;
 
@@ -162,18 +81,48 @@ pub async fn get_play_uri(session_token: &str, game_id: u32) -> Result<String, T
     }
 
     let html = resp.text().await?;
-
     if let Some(start) = html.find("vortex://") {
-        let uri_part = &html[start..];
-        let end = uri_part
+        let uri = &html[start..];
+        let end = uri
             .find(|c: char| c == '"' || c == '\'' || c.is_whitespace())
-            .unwrap_or(uri_part.len());
-        let uri = uri_part[..end].to_string();
-        tracing::debug!("Play URI: {}", uri);
-        return Ok(uri);
+            .unwrap_or(uri.len());
+        return Ok(uri[..end].to_string());
     }
 
     Err(TempestError::AuthError(
         "Could not find vortex:// URI in play page. Is the session token valid?".to_string(),
     ))
+}
+
+fn prompt(label: &str) -> String {
+    use std::io::Write;
+    print!("{} {}", ">>>".cyan(), label);
+    std::io::stdout().flush().ok();
+    let mut buf = String::new();
+    std::io::stdin().read_line(&mut buf).ok();
+    buf.trim().to_string()
+}
+
+fn prompt_hidden(label: &str) -> String {
+    use std::io::{BufRead, Write};
+    print!("{} {}", ">>>".cyan(), label);
+    std::io::stdout().flush().ok();
+
+    let fd = 0;
+    let mut term = unsafe { std::mem::zeroed::<libc::termios>() };
+    let have_term = unsafe { libc::tcgetattr(fd, &mut term) } == 0;
+    let restore = term;
+    if have_term {
+        term.c_lflag &= !libc::ECHO;
+        unsafe { libc::tcsetattr(fd, libc::TCSANOW, &term) };
+    }
+
+    let mut buf = String::new();
+    std::io::stdin().lock().read_line(&mut buf).ok();
+
+    if have_term {
+        unsafe { libc::tcsetattr(fd, libc::TCSANOW, &restore) };
+        println!();
+    }
+    buf.trim().to_string()
 }

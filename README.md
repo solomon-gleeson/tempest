@@ -32,6 +32,7 @@ tempest setup
 ```
 tempest setup        First-run: install Wine, create prefix, download client
 tempest login        Authenticate with Vortex (opens browser)
+tempest list         List all available games
 tempest play <id>    Launch a game by ID
 tempest update       Update Vortex.exe to latest version
 tempest doctor       Diagnose issues across the full stack

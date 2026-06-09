@@ -21,6 +21,7 @@ pub struct AuthConfig {
 pub struct PathConfig {
     pub wine_prefix: PathBuf,
     pub vortex_exe: PathBuf,
+    pub log_file: PathBuf,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -45,6 +46,7 @@ impl Default for PathConfig {
         Self {
             wine_prefix: data.join("prefix"),
             vortex_exe: data.join("Vortex.exe"),
+            log_file: Config::data_dir().join("tempest.log"),
         }
     }
 }
@@ -146,6 +148,7 @@ impl Config {
             paths: PathConfig {
                 wine_prefix: self.paths.wine_prefix.clone(),
                 vortex_exe: self.paths.vortex_exe.clone(),
+                log_file: self.paths.log_file.clone(),
             },
             wine: WineConfig {
                 binary: self.wine.binary.clone(),

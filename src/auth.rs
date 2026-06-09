@@ -22,12 +22,18 @@ pub async fn login() {
             cfg.auth.session_token = Some(token);
             cfg.auth.username = Some(username.clone());
             if let Err(e) = cfg.save() {
-                eprintln!("{} Failed to save config: {}", "[ERROR]".red(), e);
+                let msg = format!("Failed to save config: {}", e);
+                crate::logger::error(&msg);
+                eprintln!("{} {}", "[ERROR]".red(), msg);
             } else {
                 println!("{} Logged in as {}", "[DONE]".green(), username.bold());
             }
         }
-        Err(e) => eprintln!("{} Login failed: {}", "[ERROR]".red(), e),
+        Err(e) => {
+            let msg = format!("Login failed: {}", e);
+            crate::logger::error(&msg);
+            eprintln!("{} {}", "[ERROR]".red(), msg);
+        }
     }
 }
 

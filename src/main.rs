@@ -5,11 +5,13 @@ mod auth;
 mod launcher;
 mod updater;
 mod doctor;
-mod games;
 mod crypto;
+mod games;
+mod logger;
 
 use clap::{Parser, Subcommand};
 use thiserror::Error;
+use crate::config::Config;
 
 #[derive(Debug, Error)]
 pub enum TempestError {
@@ -52,6 +54,9 @@ async fn main() {
     tracing_subscriber::fmt()
         .with_env_filter(filter)
         .init();
+
+    let cfg = Config::load();
+    logger::init(cfg.paths.log_file.clone());
 
     let cli = Cli::parse();
 

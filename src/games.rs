@@ -86,35 +86,10 @@ async fn fetch_game_page(
 }
 
 fn extract_game_title(html: &str) -> Option<String> {
-    if let Some(start) = html.find("<title>") {
-        let after = &html[start + 7..];
-        if let Some(end) = after.find("</title>") {
-            let title = after[..end].trim();
-            let clean = title
-                .split(" - ")
-                .next()
-                .unwrap_or(title)
-                .split(" | ")
-                .next()
-                .unwrap_or(title)
-                .trim();
-            if !clean.is_empty() && !clean.eq_ignore_ascii_case("vortex") {
-                return Some(clean.to_string());
-            }
-        }
-    }
-
-    if let Some(start) = html.find("<h2") {
-        let after = &html[start..];
-        if let Some(val_start) = after.find('>') {
-            let content = &after[val_start + 1..];
-            let val_end = content.find('<').unwrap_or(content.len());
-            let name = content[..val_end].trim();
-            if !name.is_empty() && name.len() < 100 {
-                return Some(name.to_string());
-            }
-        }
-    }
-
-    None
+    let marker = r#"<div class="game-detail-title">"#;
+    let start = html.find(marker)?;
+    let after_open = &html[start + marker.len()..];
+    let end = after_open.find("</div>")?;
+    let name = after_open[..end].trim();
+    if name.is_empty() { None } else { Some(name.to_string()) }
 }

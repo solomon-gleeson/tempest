@@ -126,7 +126,9 @@ impl Config {
     pub fn save(&self) -> Result<(), TempestError> {
         let mut cloned = self.serialize_plain();
 
-        if let Some(ref token) = cloned.auth.session_token {
+        if let Some(ref token) = cloned.auth.session_token.clone()
+            && crate::crypto::decrypt(token).is_none()
+        {
             cloned.auth.session_token = Some(crate::crypto::encrypt(token));
         }
 
@@ -142,7 +144,7 @@ impl Config {
     fn serialize_plain(&self) -> Self {
         Self {
             auth: AuthConfig {
-                session_token: None,
+                session_token: self.auth.session_token.clone(),
                 username: self.auth.username.clone(),
             },
             paths: PathConfig {

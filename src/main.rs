@@ -6,6 +6,7 @@ mod launcher;
 mod updater;
 mod doctor;
 mod games;
+mod crypto;
 
 use clap::{Parser, Subcommand};
 use thiserror::Error;

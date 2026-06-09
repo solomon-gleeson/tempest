@@ -5,6 +5,7 @@ mod auth;
 mod launcher;
 mod updater;
 mod doctor;
+mod games;
 
 use clap::{Parser, Subcommand};
 use thiserror::Error;
@@ -37,6 +38,7 @@ enum Commands {
     Setup,
     Play { game_id: u32 },
     Login,
+    List,
     Update,
     UriHandler { uri: String },
     Doctor,
@@ -56,6 +58,7 @@ async fn main() {
         Commands::Setup => setup::run().await,
         Commands::Play { game_id } => launcher::play(game_id).await,
         Commands::Login => auth::login().await,
+        Commands::List => games::list().await,
         Commands::Update => updater::update().await,
         Commands::UriHandler { uri } => uri::handle(&uri).await,
         Commands::Doctor => doctor::run(),

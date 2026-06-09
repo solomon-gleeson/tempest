@@ -69,7 +69,7 @@ async fn fetch_game_page(
     id: u32,
 ) -> Result<Option<String>, TempestError> {
     let resp = client
-        .get(format!("{BASE}/games/{id}"))
+        .get(format!("{BASE}/api/games/{id}"))
         .header("Cookie", format!("session_token={}", token))
         .send()
         .await?;
@@ -78,18 +78,11 @@ async fn fetch_game_page(
         return Ok(None);
     }
 
-    let body = resp.text().await?;
+    let game: serde_json::Value = resp.json().await?;
+    let name = match game.get("name").and_then(|v| v.as_str()) {
+        Some(n) => n.to_string(),
+        None => return Ok(None),
+    };
 
-    let name = extract_game_title(&body);
-
-    Ok(name)
-}
-
-fn extract_game_title(html: &str) -> Option<String> {
-    let marker = r#"<div class="game-detail-title">"#;
-    let start = html.find(marker)?;
-    let after_open = &html[start + marker.len()..];
-    let end = after_open.find("</div>")?;
-    let name = after_open[..end].trim();
-    if name.is_empty() { None } else { Some(name.to_string()) }
+    if name.is_empty() { Ok(None) } else { Ok(Some(name)) }
 }

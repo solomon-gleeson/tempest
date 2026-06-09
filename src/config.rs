@@ -90,17 +90,76 @@ impl Config {
             return Self::default();
         }
         let contents = std::fs::read_to_string(&path).unwrap_or_default();
-        toml::from_str(&contents).unwrap_or_default()
+
+        #[derive(serde::Deserialize)]
+        struct RawConfig {
+            auth: RawAuth,
+        }
+
+        #[derive(serde::Deserialize)]
+        struct RawAuth {
+            session_token: Option<String>,
+            #[allow(dead_code)]
+            username: Option<String>,
+        }
+
+        let raw: RawConfig = toml::from_str(&contents).unwrap_or(RawConfig {
+            auth: RawAuth {
+                session_token: None,
+                username: None,
+            },
+        });
+
+        let mut cfg: Self = toml::from_str(&contents).unwrap_or_default();
+
+        if let Some(ref token) = raw.auth.session_token
+            && let Some(decrypted) = crate::crypto::decrypt(token)
+        {
+            cfg.auth.session_token = Some(decrypted);
+        }
+
+        cfg
     }
 
     pub fn save(&self) -> Result<(), TempestError> {
+        let mut cloned = self.serialize_plain();
+
+        if let Some(ref token) = cloned.auth.session_token {
+            cloned.auth.session_token = Some(crate::crypto::encrypt(token));
+        }
+
         let dir = Self::config_dir();
         std::fs::create_dir_all(&dir)?;
         let path = dir.join("config.toml");
-        let contents = toml::to_string_pretty(self)
+        let contents = toml::to_string_pretty(&cloned)
             .map_err(|e| TempestError::ConfigError(e.to_string()))?;
         std::fs::write(path, contents)?;
         Ok(())
+    }
+
+    fn serialize_plain(&self) -> Self {
+        Self {
+            auth: AuthConfig {
+                session_token: None,
+                username: self.auth.username.clone(),
+            },
+            paths: PathConfig {
+                wine_prefix: self.paths.wine_prefix.clone(),
+                vortex_exe: self.paths.vortex_exe.clone(),
+            },
+            wine: WineConfig {
+                binary: self.wine.binary.clone(),
+                env: self.wine.env.clone(),
+            },
+            launcher: LauncherConfig {
+                filter_wine_noise: self.launcher.filter_wine_noise,
+                auto_update: self.launcher.auto_update,
+                use_esync: self.launcher.use_esync,
+                use_fsync: self.launcher.use_fsync,
+                use_gamemode: self.launcher.use_gamemode,
+                shader_cache: self.launcher.shader_cache,
+            },
+        }
     }
 }
 

@@ -29,6 +29,8 @@ tempest setup
 
 `setup` installs Wine, creates a dedicated Wine prefix, installs DXVK and vkd3d-proton, downloads Vortex, and registers the `vortex://` URI scheme.
 
+New to Linux or hitting driver errors? Paste [docs/setup-agent-prompt.md](docs/setup-agent-prompt.md) into your AI agent and it will detect your distro and GPU, install the right Vulkan drivers, and configure Tempest for you.
+
 ---
 
 ## Commands

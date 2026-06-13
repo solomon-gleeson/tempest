@@ -39,6 +39,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     Setup,
+    Token,
     Play { game_id: u32 },
     Login,
     List,
@@ -61,6 +62,10 @@ async fn main() {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Token => match cfg.auth.session_token {
+            Some(t) => println!("{t}"),
+            None => eprintln!("Not logged in. Run `tempest login` first."),
+        },
         Commands::Setup => setup::run().await,
         Commands::Play { game_id } => launcher::play(game_id).await,
         Commands::Login => auth::login().await,

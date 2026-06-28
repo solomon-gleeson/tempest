@@ -8,6 +8,7 @@ mod doctor;
 mod crypto;
 mod games;
 mod logger;
+mod plugin;
 
 use clap::{Parser, Subcommand};
 use thiserror::Error;
@@ -47,6 +48,7 @@ enum Commands {
     UriHandler { uri: String },
     Doctor,
     Uninstall,
+    Plugin { args: Vec<String> },
 }
 
 #[tokio::main]
@@ -74,5 +76,6 @@ async fn main() {
         Commands::UriHandler { uri } => uri::handle(&uri).await,
         Commands::Doctor => doctor::run(),
         Commands::Uninstall => setup::uninstall(),
+        Commands::Plugin { args } => plugin::run(&args),
     }
 }

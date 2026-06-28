@@ -63,6 +63,10 @@ fn build_wine_command(config: &Config, uri: &str, use_gamemode: bool) -> Command
         cmd.env(key, value);
     }
 
+    for (key, value) in crate::plugin::env_vars(config) {
+        cmd.env(key, value);
+    }
+
     cmd.arg(&config.paths.vortex_exe);
     cmd.arg(uri);
     cmd

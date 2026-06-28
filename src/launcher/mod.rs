@@ -167,9 +167,28 @@ async fn launch_with_uri(uri: String) {
         }
     });
 
+    let optim_handle = if crate::plugin::installed("vortex-optim") {
+        crate::plugin::binary_path("vortex-optim").map(|path| {
+            println!("{} Starting vortex-optim...", "[INFO]".cyan());
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_secs(10));
+                match std::process::Command::new(&path).spawn() {
+                    Ok(mut c) => {
+                        tracing::debug!("vortex-optim PID {}", c.id());
+                        let _ = c.wait();
+                    }
+                    Err(e) => tracing::warn!("vortex-optim failed: {}", e),
+                }
+            })
+        })
+    } else {
+        None
+    };
+
     let status = child.wait().unwrap_or_else(|_| std::process::exit(1));
     stderr_handle.join().ok();
     stdout_handle.join().ok();
+    if let Some(h) = optim_handle { h.join().ok(); }
 
     drop(pm);
 

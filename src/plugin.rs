@@ -91,7 +91,18 @@ pub fn run(args: &[String]) {
                 _ => eprintln!("Unknown plugin '{}'. Available: fps-unlocker", name),
             }
         }
-        _ => eprintln!("Usage: tempest plugin [<name>]"),
+        [verb, name] if verb == "uninstall" => {
+            let dir = plugin_dir(name);
+            if dir.is_dir() {
+                match std::fs::remove_dir_all(&dir) {
+                    Ok(()) => println!("Removed plugin '{}'.", name),
+                    Err(e) => eprintln!("Failed to remove plugin '{}': {}", name, e),
+                }
+            } else {
+                eprintln!("Plugin '{}' is not installed.", name);
+            }
+        }
+        _ => eprintln!("Usage: tempest plugin [<name>] | tempest plugin uninstall <name>"),
     }
 }
 

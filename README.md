@@ -36,13 +36,16 @@ New to Linux or hitting driver errors? Paste [docs/setup-agent-prompt.md](docs/s
 ## Commands
 
 ```
-tempest setup        First-run: install Wine, create prefix, download client
-tempest login        Authenticate with Vortex (opens browser)
-tempest list         List all available games
-tempest play <id>    Launch a game by ID
-tempest update       Update Vortex.exe to latest version
-tempest doctor       Diagnose issues across the full stack
-tempest uninstall    Remove everything Tempest installed
+tempest setup              First-run: install Wine, create prefix, download client
+tempest login              Authenticate with Vortex (opens browser)
+tempest list               List all available games
+tempest play <id>          Launch a game by ID
+tempest update             Update Vortex.exe to latest version
+tempest doctor             Diagnose issues across the full stack
+tempest plugin             List installed plugins
+tempest plugin <name>      Install a plugin (e.g. fps-unlocker)
+tempest plugin uninstall   Remove a plugin
+tempest uninstall          Remove everything Tempest installed
 ```
 
 After setup, clicking Play on the Vortex website triggers `tempest uri-handler` automatically via the registered `vortex://` scheme.
@@ -57,14 +60,6 @@ After setup, clicking Play on the Vortex website triggers `tempest uri-handler` 
 | Debian, Ubuntu, Mint, Pop!_OS | apt |
 | Arch, Manjaro, EndeavourOS | pacman |
 | openSUSE | zypper |
-
----
-
-## Requirements
-
-- A Vulkan-capable GPU (NVIDIA, AMD, or Intel)
-- `xdg-utils` for URI scheme registration
-- Wine is installed automatically by `tempest setup`
 
 ---
 
@@ -103,14 +98,6 @@ Checks Wine, Vulkan, GPU, DXVK, vkd3d-proton, GameMode, the URI handler, network
 ```bash
 TEMPEST_LOG=debug tempest play 4
 ```
-
----
-
-## Known limitations
-
-- Wine runs under XWayland. Native Wayland Wine support depends on your Wine build.
-- First launch after a fresh `wineboot` may take 30 to 60 seconds while Wine initialises the prefix.
-- NVIDIA Optimus: if the integrated GPU is selected, set `VK_ICD_FILENAMES` in `[wine.env]` to force the discrete GPU.
 
 ---
 

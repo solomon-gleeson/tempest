@@ -49,6 +49,7 @@ enum Commands {
     UriHandler { uri: String },
     Doctor,
     Uninstall,
+    Support,
     Plugin { args: Vec<String> },
 }
 
@@ -78,5 +79,9 @@ async fn main() {
         Commands::Doctor => doctor::run(),
         Commands::Uninstall => setup::uninstall(),
         Commands::Plugin { args } => plugin::run(&args),
+        Commands::Support => {
+            println!("Join the Tempest support server:");
+            println!("  https://discord.gg/yqWCHSz63p");
+        }
     }
 }

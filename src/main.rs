@@ -45,6 +45,7 @@ enum Commands {
     Login,
     List,
     Update,
+    #[clap(hide = true)]
     UriHandler { uri: String },
     Doctor,
     Uninstall,
